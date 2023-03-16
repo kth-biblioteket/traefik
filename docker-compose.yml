@@ -1,0 +1,41 @@
+version: '3.6'
+
+services:
+  traefik:
+    image: traefik:v2.9
+    restart: always
+    command:
+      - --log.level=DEBUG
+      - --api.insecure=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.myresolver.acme.httpchallenge=true
+      - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.myresolver.acme.email=tholind@kth.se
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+      - --api.dashboard=true
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      apps-net:
+        ipv4_address: 172.18.0.254
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+      - ./.pwd:/.pwd
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`proxy.sites.lib.kth.se`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=api-auth"
+      - "traefik.http.middlewares.api-auth.basicauth.usersfile=/.pwd"
+
+networks:
+  apps-net:
+    external: true
