@@ -8,6 +8,7 @@ Skapa en .env fil med host, email och usersfile
 HOST=xxxxxx.lib.kth.se
 EMAIL=xxxxxx@kth.se
 USERSFILE=/.pwd
+```
 
 
 ##
